@@ -17,6 +17,9 @@ export const FALLBACK_REMOTE_SHELL_PROFILE: RemoteShellProfile = {
 const CAPTURE_TIMEOUT_MS = 5_000;
 const SHELL_TIMEOUT_MS = 3_000;
 
+const LOGIN_SHELLS = new Set(['bash', 'ksh', 'zsh']);
+const BASIC_POSIX_SHELLS = new Set(['dash', 'sh']);
+const SUPPORTED_REMOTE_SHELLS = new Set([...BASIC_POSIX_SHELLS, ...LOGIN_SHELLS]);
 const VOLATILE_ENV_KEYS = new Set(['_', 'PWD', 'OLDPWD', 'SHLVL', 'COLUMNS', 'LINES']);
 
 type RawExecResult = {
@@ -26,7 +29,7 @@ type RawExecResult = {
 
 export function normalizeRemoteShell(raw: string | undefined | null): string {
   const shell = raw?.trim();
-  if (!shell || !shell.startsWith('/')) {
+  if (!shell || !shell.startsWith('/') || !SUPPORTED_REMOTE_SHELLS.has(shellBasename(shell))) {
     return DEFAULT_REMOTE_SHELL;
   }
   return shell;
@@ -53,8 +56,9 @@ export function buildRemoteShellCommand(
   command: string,
   env: Record<string, string> = {}
 ): string {
+  const shell = normalizeRemoteShell(profile.shell);
   const prefix = `${buildRemoteShellEnvPrefix(profile.env)}${buildRemoteShellEnvPrefix(env)}`;
-  return `${quoteShellArg(profile.shell)} ${remoteShellCommandFlag(profile.shell)} ${quoteShellArg(
+  return `${quoteShellArg(shell)} ${remoteShellCommandFlag(shell)} ${quoteShellArg(
     `${prefix}${command}`
   )}`;
 }
@@ -97,11 +101,15 @@ function shouldForwardEnvKey(key: string): boolean {
 }
 
 function remoteShellCommandFlag(shell: string): string {
-  return shell.endsWith('/sh') ? '-c' : '-lc';
+  return BASIC_POSIX_SHELLS.has(shellBasename(shell)) ? '-c' : '-lc';
 }
 
 function remoteShellEnvCaptureFlag(shell: string): string {
-  return shell.endsWith('/sh') ? '-ic' : '-ilc';
+  return BASIC_POSIX_SHELLS.has(shellBasename(shell)) ? '-ic' : '-ilc';
+}
+
+function shellBasename(shell: string): string {
+  return shell.split('/').pop() ?? '';
 }
 
 function execRaw(client: Client, command: string, timeoutMs: number): Promise<RawExecResult> {

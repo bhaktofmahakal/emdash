@@ -19,6 +19,12 @@ describe('SshClientProxy remote shell profile', () => {
     mocks.captureRemoteShellProfile.mockReset();
   });
 
+  it('returns a rejected promise when the SSH connection is unavailable', async () => {
+    const proxy = new SshClientProxy();
+
+    await expect(proxy.getRemoteShellProfile()).rejects.toThrow('SSH connection is not available');
+  });
+
   it('captures and caches the remote shell profile behind the proxy API', async () => {
     const client = {};
     const profile = {
@@ -34,6 +40,33 @@ describe('SshClientProxy remote shell profile', () => {
 
     expect(mocks.captureRemoteShellProfile).toHaveBeenCalledTimes(1);
     expect(mocks.captureRemoteShellProfile).toHaveBeenCalledWith(client);
+  });
+
+  it('does not cache an in-flight shell profile after invalidation', async () => {
+    let resolveFirst!: (profile: { shell: string; env: Record<string, string> }) => void;
+    const firstCapture = new Promise<{ shell: string; env: Record<string, string> }>((resolve) => {
+      resolveFirst = resolve;
+    });
+    const firstClient = {};
+    const secondClient = {};
+    mocks.captureRemoteShellProfile
+      .mockReturnValueOnce(firstCapture)
+      .mockResolvedValueOnce({ shell: '/bin/bash', env: { PATH: '/second' } });
+    const proxy = new SshClientProxy();
+
+    proxy.update(firstClient as never);
+    const staleCapture = proxy.getRemoteShellProfile();
+    proxy.invalidate();
+    proxy.update(secondClient as never);
+    resolveFirst({ shell: '/bin/zsh', env: { PATH: '/first' } });
+    await staleCapture;
+
+    await expect(proxy.getRemoteShellProfile()).resolves.toEqual({
+      shell: '/bin/bash',
+      env: { PATH: '/second' },
+    });
+    expect(mocks.captureRemoteShellProfile).toHaveBeenCalledTimes(2);
+    expect(mocks.captureRemoteShellProfile).toHaveBeenNthCalledWith(2, secondClient);
   });
 
   it('clears cached shell profile on invalidate', async () => {

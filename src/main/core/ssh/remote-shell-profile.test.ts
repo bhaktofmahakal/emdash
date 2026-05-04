@@ -77,4 +77,11 @@ describe('remote shell profile command building', () => {
     expect(normalizeRemoteShell('zsh')).toBe('/bin/sh');
     expect(normalizeRemoteShell('/bin/zsh\n')).toBe('/bin/zsh');
   });
+
+  it('falls back to /bin/sh for unsupported remote shells', () => {
+    expect(normalizeRemoteShell('/usr/local/bin/fish')).toBe('/bin/sh');
+    expect(buildRemoteShellCommand({ shell: '/usr/local/bin/fish', env: {} }, 'echo ok')).toBe(
+      "'/bin/sh' -c 'echo ok'"
+    );
+  });
 });
