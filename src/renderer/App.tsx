@@ -1,4 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { AppMenuEvents } from './app/app-menu-events';
 import { WelcomeScreen } from './app/welcome';
 import { Workspace } from './app/workspace';
 import { IntegrationsProvider } from './features/integrations/integrations-provider';
@@ -18,6 +20,7 @@ export const FIRST_LAUNCH_KEY = 'emdash:first-launch:v1';
 
 export function App() {
   const [isFirstLaunch, setIsFirstLaunch] = useLocalStorage<boolean>(FIRST_LAUNCH_KEY, true);
+  const openSettingsFromMenu = useCallback(() => setIsFirstLaunch(false), [setIsFirstLaunch]);
 
   const renderContent = () => {
     if (isFirstLaunch) {
@@ -37,7 +40,10 @@ export function App() {
                   <WorkspaceViewProvider>
                     <RightSidebarProvider>
                       <ThemeProvider>
-                        <ErrorBoundary>{renderContent()}</ErrorBoundary>
+                        <ErrorBoundary>
+                          <AppMenuEvents onOpenSettings={openSettingsFromMenu} />
+                          {renderContent()}
+                        </ErrorBoundary>
                       </ThemeProvider>
                     </RightSidebarProvider>
                   </WorkspaceViewProvider>
