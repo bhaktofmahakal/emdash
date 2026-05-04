@@ -2,10 +2,8 @@ import { createRPCController } from '@shared/ipc/rpc';
 import type { TelemetryEvent } from '@shared/telemetry';
 import {
   capture,
-  getDevFlagOverrides,
-  getPosthogConfig,
+  getFeatureFlags,
   getTelemetryStatus,
-  identify,
   setTelemetryEnabledViaUser,
 } from '@main/lib/telemetry';
 
@@ -19,9 +17,5 @@ export const telemetryController = createRPCController({
   setEnabled: (enabled: boolean) => {
     setTelemetryEnabledViaUser(enabled);
   },
-  identify: (username: string) => {
-    identify(username);
-  },
-  getConfig: () => getPosthogConfig(),
-  getDevFlagOverrides: () => getDevFlagOverrides(),
+  getFeatureFlags: () => getFeatureFlags(),
 });

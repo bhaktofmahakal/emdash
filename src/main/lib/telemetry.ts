@@ -19,6 +19,8 @@ let sessionId: string | undefined;
 let lastActiveDate: string | undefined;
 let cachedGithubUsername: string | null = null;
 let cachedAccountId: string | null = null;
+let cachedEmail: string | null = null;
+let cachedFeatureFlags: Record<string, boolean> = {};
 let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
 
 const libName = 'emdash';
@@ -28,8 +30,6 @@ type TelemetryKVSchema = {
   enabled: string;
   onboardingSeen: string;
   lastActiveDate: string;
-  githubUsername: string;
-  accountId: string;
   lastSessionId: string;
   lastHeartbeatTs: string;
 };
@@ -208,7 +208,11 @@ async function posthogCapture(
   }
 }
 
-async function posthogIdentify(username: string, accountId?: string): Promise<void> {
+async function posthogIdentify(
+  username: string,
+  accountId?: string,
+  email?: string
+): Promise<void> {
   if (!isEnabled() || !username) return;
   try {
     const u = (host ?? '').replace(/\/$/, '') + '/capture/';
@@ -220,6 +224,7 @@ async function posthogIdentify(username: string, accountId?: string): Promise<vo
         $set: {
           github_username: username,
           ...(accountId ? { account_id: accountId } : {}),
+          ...(email ? { email } : {}),
           ...getBaseProps(),
         },
       },
@@ -229,6 +234,42 @@ async function posthogIdentify(username: string, accountId?: string): Promise<vo
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }).catch(() => undefined);
+  } catch {
+    // swallow errors; telemetry must never crash the app
+  }
+}
+
+async function posthogDecide(): Promise<void> {
+  if (!isEnabled() || !instanceId) return;
+  try {
+    const u = (host ?? '').replace(/\/$/, '') + '/decide/?v=3';
+    const body = {
+      api_key: apiKey,
+      distinct_id: instanceId,
+      person_properties: {
+        ...(cachedGithubUsername ? { github_username: cachedGithubUsername } : {}),
+        ...(cachedAccountId ? { account_id: cachedAccountId } : {}),
+        ...(cachedEmail ? { email: cachedEmail } : {}),
+      },
+    };
+    const response = await fetch(u, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (response.ok) {
+      const data = (await response.json()) as { featureFlags?: Record<string, unknown> };
+      const flags = data.featureFlags ?? {};
+      const parsed: Record<string, boolean> = {};
+      for (const [key, value] of Object.entries(flags)) {
+        if (typeof value === 'boolean') {
+          parsed[key] = value;
+        } else if (value === 'true' || value === 'false') {
+          parsed[key] = value === 'true';
+        }
+      }
+      cachedFeatureFlags = parsed;
+    }
   } catch {
     // swallow errors; telemetry must never crash the app
   }
@@ -274,8 +315,6 @@ export async function init(options?: InitOptions): Promise<void> {
   let storedEnabled: string | null = null;
   let storedOnboarding: string | null = null;
   let storedActiveDate: string | null = null;
-  let storedGithubUsername: string | null = null;
-  let storedAccountId: string | null = null;
   let storedLastSessionId: string | null = null;
   let storedLastHeartbeatTs: string | null = null;
   try {
@@ -284,8 +323,6 @@ export async function init(options?: InitOptions): Promise<void> {
       storedEnabled,
       storedOnboarding,
       storedActiveDate,
-      storedGithubUsername,
-      storedAccountId,
       storedLastSessionId,
       storedLastHeartbeatTs,
     ] = await Promise.all([
@@ -293,8 +330,6 @@ export async function init(options?: InitOptions): Promise<void> {
       telemetryKV.get('enabled'),
       telemetryKV.get('onboardingSeen'),
       telemetryKV.get('lastActiveDate'),
-      telemetryKV.get('githubUsername'),
-      telemetryKV.get('accountId'),
       telemetryKV.get('lastSessionId'),
       telemetryKV.get('lastHeartbeatTs'),
     ]);
@@ -310,11 +345,6 @@ export async function init(options?: InitOptions): Promise<void> {
   userOptOut = storedEnabled === 'false' ? true : undefined;
   onboardingSeen = storedOnboarding === 'true';
   lastActiveDate = storedActiveDate ?? undefined;
-  cachedGithubUsername = storedGithubUsername ?? null;
-  cachedAccountId = storedAccountId ?? null;
-  if (cachedGithubUsername) {
-    void posthogIdentify(cachedGithubUsername, cachedAccountId ?? undefined);
-  }
 
   // Detect unclean exit from the previous session: if we have a recorded session ID
   // that was never cleared by a clean shutdown, emit a synthetic app_closed so that
@@ -344,19 +374,29 @@ export async function init(options?: InitOptions): Promise<void> {
 }
 
 /**
- * Associate the current anonymous session with a known identity. Call this
- * whenever authentication succeeds — pass the GitHub username and, optionally,
- * the emdash account ID so both are linked in PostHog.
+ * Associate the current anonymous session with a known identity. Called via
+ * the accountChanged hook when sign-in succeeds or on cold boot if a session
+ * is already stored. Triggers a PostHog identify and a decide call to refresh
+ * cached feature flags.
  */
-export function identify(username: string, accountId?: string): void {
+export async function identify(username: string, userId: string, email: string): Promise<void> {
   if (!username) return;
   cachedGithubUsername = username;
-  void telemetryKV.set('githubUsername', username);
-  if (accountId) {
-    cachedAccountId = accountId;
-    void telemetryKV.set('accountId', accountId);
-  }
-  void posthogIdentify(username, accountId ?? cachedAccountId ?? undefined);
+  cachedAccountId = userId;
+  cachedEmail = email;
+  await posthogIdentify(username, userId, email);
+  await posthogDecide();
+}
+
+/**
+ * Clear the cached identity and feature flags. Called via the accountCleared
+ * hook when the user signs out.
+ */
+export function clearIdentity(): void {
+  cachedGithubUsername = null;
+  cachedAccountId = null;
+  cachedEmail = null;
+  cachedFeatureFlags = {};
 }
 
 export function capture<E extends TelemetryEvent>(
@@ -436,12 +476,13 @@ export async function checkAndReportDailyActiveUser(): Promise<void> {
   return checkDailyActiveUser();
 }
 
-export function getPosthogConfig(): { apiKey: string | undefined; apiHost: string | undefined } {
-  return { apiKey: apiKey ?? undefined, apiHost: host ?? undefined };
-}
+/**
+ * Returns the current set of evaluated feature flags. In dev mode, FLAG_*
+ * environment variables (e.g. FLAG_my_flag=true) override any PostHog values.
+ */
+export function getFeatureFlags(): Record<string, boolean> {
+  if (!isViteDevBuild) return cachedFeatureFlags;
 
-export function getDevFlagOverrides(): Record<string, boolean> {
-  if (!import.meta.env.DEV) return {};
   const overrides: Record<string, boolean> = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (key.startsWith('FLAG_')) {
@@ -449,5 +490,5 @@ export function getDevFlagOverrides(): Record<string, boolean> {
       overrides[flagName] = value === 'true' || value === '1';
     }
   }
-  return overrides;
+  return { ...cachedFeatureFlags, ...overrides };
 }

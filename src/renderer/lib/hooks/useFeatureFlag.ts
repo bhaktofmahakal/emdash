@@ -1,9 +1,8 @@
-import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useFeatureFlagOverrides } from '@renderer/lib/providers/feature-flag-override-context';
+import { useFeatureFlags } from '@renderer/lib/providers/feature-flag-override-context';
 
 /**
- * Returns true when the named PostHog feature flag is enabled for this client.
- * Returns false while flags are loading or when PostHog is not configured.
+ * Returns true when the named feature flag is enabled for this client.
+ * Returns false while flags are loading or when telemetry is not configured.
  *
  * In dev builds, FLAG_<name> env vars (hyphens → underscores) in .env.local
  * take precedence. Example: FLAG_workspace_provider=true enables "workspace-provider".
@@ -11,7 +10,6 @@ import { useFeatureFlagOverrides } from '@renderer/lib/providers/feature-flag-ov
  * never baked into the renderer bundle.
  */
 export function useFeatureFlag(flag: string): boolean {
-  const posthogValue = useFeatureFlagEnabled(flag) ?? false;
-  const overrides = useFeatureFlagOverrides();
-  return flag in overrides ? (overrides[flag] ?? false) : posthogValue;
+  const flags = useFeatureFlags();
+  return flags[flag] ?? false;
 }

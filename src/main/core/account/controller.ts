@@ -1,6 +1,6 @@
 import { createRPCController } from '@shared/ipc/rpc';
 import { log } from '@main/lib/logger';
-import { capture, identify as telemetryIdentify } from '@main/lib/telemetry';
+import { capture } from '@main/lib/telemetry';
 import { emdashAccountService } from './services/emdash-account-service';
 
 export const accountController = createRPCController({
@@ -16,7 +16,6 @@ export const accountController = createRPCController({
   signIn: async (provider?: string) => {
     try {
       const result = await emdashAccountService.signIn(provider);
-      telemetryIdentify(result.user.username, result.user.userId);
       capture('user_signed_in');
       return { success: true, user: result.user };
     } catch (error) {

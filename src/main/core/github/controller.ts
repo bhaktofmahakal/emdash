@@ -18,7 +18,7 @@ import { githubConnectionService } from '@main/core/github/services/github-conne
 import { repoService } from '@main/core/github/services/repo-service';
 import { sshConnectionManager } from '@main/core/ssh/ssh-connection-manager';
 import { log } from '@main/lib/logger';
-import { capture, identify as telemetryIdentify } from '@main/lib/telemetry';
+import { capture } from '@main/lib/telemetry';
 
 export const githubController = createRPCController({
   getStatus: async (): Promise<GitHubStatusResponse> => {
@@ -35,10 +35,6 @@ export const githubController = createRPCController({
       const result = await githubConnectionService.startDeviceFlowAuth();
       if (result.success) {
         capture('integration_connected', { provider: 'github' });
-        const user = await githubConnectionService.getCurrentUser();
-        if (user?.login) {
-          telemetryIdentify(user.login);
-        }
       }
       return result;
     } catch (error) {
@@ -53,14 +49,6 @@ export const githubController = createRPCController({
       const result = await githubConnectionService.startOAuthFlow(baseUrl);
       if (result.success) {
         capture('integration_connected', { provider: 'github' });
-        if (result.user?.login) {
-          telemetryIdentify(result.user.login);
-        } else {
-          const user = await githubConnectionService.getCurrentUser();
-          if (user?.login) {
-            telemetryIdentify(user.login);
-          }
-        }
       }
       return result;
     } catch (error) {

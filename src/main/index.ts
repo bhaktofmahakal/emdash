@@ -91,6 +91,13 @@ void app.whenReady().then(async () => {
     log.warn('telemetry init failed:', e);
   }
 
+  emdashAccountService.on('accountChanged', (username, userId, email) => {
+    void telemetry.identify(username, userId, email);
+  });
+  emdashAccountService.on('accountCleared', () => {
+    telemetry.clearIdentity();
+  });
+
   gitWatcherRegistry.initialize();
   prSyncScheduler.initialize();
   appService.initialize();
