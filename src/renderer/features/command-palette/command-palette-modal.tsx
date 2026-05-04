@@ -18,8 +18,8 @@ interface CommandPaletteProps {
 type MergedResult = SearchItem | CommandActionWithHandler;
 
 const KIND_ICON: Record<string, React.ReactNode> = {
-  action:  <Zap size={14} className="shrink-0 text-foreground/40" />,
-  task:    <GitBranch size={14} className="shrink-0 text-foreground/40" />,
+  action: <Zap size={14} className="shrink-0 text-foreground/40" />,
+  task: <GitBranch size={14} className="shrink-0 text-foreground/40" />,
   project: <FolderOpen size={14} className="shrink-0 text-foreground/40" />,
 };
 
@@ -129,12 +129,7 @@ export function CommandPaletteModal({
             {actionResults.length > 0 && (
               <Command.Group heading="Actions" className={GROUP_CLASS}>
                 {actionResults.map((item) => (
-                  <PaletteItem
-                    key={item.id}
-                    value={item.id}
-                    item={item}
-                    onSelect={item.execute}
-                  />
+                  <PaletteItem key={item.id} value={item.id} item={item} onSelect={item.execute} />
                 ))}
               </Command.Group>
             )}
