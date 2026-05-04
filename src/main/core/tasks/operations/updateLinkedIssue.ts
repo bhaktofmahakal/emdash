@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { type Issue } from '@shared/tasks';
 import { db } from '@main/db/client';
 import { tasks } from '@main/db/schema';
-import { capture } from '@main/lib/telemetry';
+import { telemetryService } from '@main/lib/telemetry';
 
 export async function updateLinkedIssue(taskId: string, issue?: Issue) {
   const [task] = await db
@@ -20,7 +20,7 @@ export async function updateLinkedIssue(taskId: string, issue?: Issue) {
     .where(eq(tasks.id, taskId));
 
   if (issue) {
-    capture('issue_linked_to_task', {
+    telemetryService.capture('issue_linked_to_task', {
       provider: issue.provider,
       project_id: task.projectId,
       task_id: task.id,

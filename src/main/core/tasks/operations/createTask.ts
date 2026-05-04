@@ -12,7 +12,7 @@ import { projectManager } from '@main/core/projects/project-manager';
 import { taskManager } from '@main/core/tasks/task-manager';
 import { db } from '@main/db/client';
 import { tasks } from '@main/db/schema';
-import { capture } from '@main/lib/telemetry';
+import { telemetryService } from '@main/lib/telemetry';
 import { createConversation } from '../../conversations/createConversation';
 import { prQueryService } from '../../pull-requests/pr-query-service';
 import { appSettingsService } from '../../settings/settings-service';
@@ -218,7 +218,7 @@ export async function createTask(
   if (!provisionResult.success) {
     return err(mapProvisionError(provisionResult.error));
   }
-  capture('task_provisioned', {
+  telemetryService.capture('task_provisioned', {
     project_id: params.projectId,
     task_id: params.id,
   });
@@ -241,7 +241,7 @@ export async function createTask(
     return 'branch';
   })();
 
-  capture('task_created', {
+  telemetryService.capture('task_created', {
     strategy: taskCreatedStrategy,
     has_initial_prompt: Boolean(params.initialConversation?.initialPrompt?.trim()),
     has_issue: params.linkedIssue?.provider ?? 'none',
@@ -250,7 +250,7 @@ export async function createTask(
     task_id: params.id,
   });
   if (params.linkedIssue) {
-    capture('issue_linked_to_task', {
+    telemetryService.capture('issue_linked_to_task', {
       provider: params.linkedIssue.provider,
       project_id: params.projectId,
       task_id: params.id,

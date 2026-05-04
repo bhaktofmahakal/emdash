@@ -1,21 +1,22 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { createContext, useContext, type ReactNode } from 'react';
 import { rpc } from '@renderer/lib/ipc';
 
-const FeatureFlagOverrideContext = createContext<Record<string, boolean>>({});
+const FeatureFlagContext = createContext<Record<string, boolean>>({});
 
-export function FeatureFlagOverrideProvider({ children }: { children: ReactNode }) {
-  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    rpc.telemetry
-      .getDevFlagOverrides()
-      .then(setOverrides)
-      .catch(() => {});
-  }, []);
-
-  return <FeatureFlagOverrideContext value={overrides}>{children}</FeatureFlagOverrideContext>;
+export function FeatureFlagProvider({ children }: { children: ReactNode }) {
+  const { data: flags = {} } = useQuery({
+    queryKey: ['feature-flags'],
+    queryFn: () => rpc.telemetry.getFeatureFlags(),
+    staleTime: Infinity,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return !data || Object.keys(data).length === 0 ? 2_000 : false;
+    },
+  });
+  return <FeatureFlagContext value={flags}>{children}</FeatureFlagContext>;
 }
 
-export function useFeatureFlagOverrides(): Record<string, boolean> {
-  return useContext(FeatureFlagOverrideContext);
+export function useFeatureFlags(): Record<string, boolean> {
+  return useContext(FeatureFlagContext);
 }

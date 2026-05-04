@@ -4,7 +4,7 @@ import { taskManager } from '@main/core/tasks/task-manager';
 import { db } from '@main/db/client';
 import { tasks } from '@main/db/schema';
 import { log } from '@main/lib/logger';
-import { capture } from '@main/lib/telemetry';
+import { telemetryService } from '@main/lib/telemetry';
 
 export async function archiveTask(projectId: string, taskId: string): Promise<void> {
   const [task] = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
@@ -21,7 +21,7 @@ export async function archiveTask(projectId: string, taskId: string): Promise<vo
       statusChangedAt: sql`CURRENT_TIMESTAMP`,
     })
     .where(eq(tasks.id, taskId));
-  capture('task_archived', { project_id: projectId, task_id: taskId });
+  telemetryService.capture('task_archived', { project_id: projectId, task_id: taskId });
 
   if (!project) return;
 
