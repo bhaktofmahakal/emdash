@@ -43,6 +43,7 @@ import { IssueSelector } from './components/issue-selector/issue-selector';
 import { useTaskViewNavigation } from './hooks/use-task-view-navigation';
 import { useTaskViewShortcuts } from './hooks/use-task-view-shortcuts';
 import { useGitActions } from './use-git-actions';
+import { Toggle } from '@renderer/lib/ui/toggle';
 
 export const TaskTitlebar = observer(function TaskTitlebar() {
   const { projectId, taskId } = useTaskViewContext();
@@ -356,14 +357,6 @@ const ActiveTaskTitlebar = observer(function ActiveTaskTitlebar({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger>
-                <ToggleGroupItem value="terminals" size="sm">
-                  <Terminal className="size-3.5" />
-                </ToggleGroupItem>
-              </TooltipTrigger>
-              <TooltipContent>Terminals</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger>
                 <ToggleGroupItem value="files" size="sm">
                   <ListTree className="size-3.5" />
                 </ToggleGroupItem>
@@ -371,6 +364,18 @@ const ActiveTaskTitlebar = observer(function ActiveTaskTitlebar({
               <TooltipContent>File explorer</TooltipContent>
             </Tooltip>
           </ToggleGroup>
+          <Tooltip>
+            <TooltipTrigger>
+              <Toggle
+              size='sm'
+                pressed={taskView.isTerminalDrawerOpen}
+                onPressedChange={() => taskView.setTerminalDrawerOpen(!taskView.isTerminalDrawerOpen)}
+              >
+                <Terminal className="size-3.5" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent>Toggle terminal</TooltipContent>
+          </Tooltip>
         </div>
       }
     />

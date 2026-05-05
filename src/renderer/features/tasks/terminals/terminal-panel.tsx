@@ -12,7 +12,6 @@ import {
 } from '@renderer/lib/hooks/useKeyboardShortcuts';
 import { useTabShortcuts } from '@renderer/lib/hooks/useTabShortcuts';
 import { rpc } from '@renderer/lib/ipc';
-import { useWorkspaceLayoutContext } from '@renderer/lib/layout/layout-provider';
 import { type PtySession } from '@renderer/lib/pty/pty-session';
 import { type TabViewProvider } from '@renderer/lib/stores/generic-tab-view';
 import { Button } from '@renderer/lib/ui/button';
@@ -40,7 +39,6 @@ export const TerminalsPanel = observer(function TerminalsPanel() {
   const terminalTabView = provisionedTask.taskView.terminalTabs;
   const lifecycleScriptsMgr = provisionedTask.workspace.lifecycleScripts ?? null;
   const { value: keyboard } = useAppSettingsKey('keyboard');
-  const { isRightOpen } = useWorkspaceLayoutContext();
   const isActive = useIsActiveTask(taskId);
   const mountedProject = asMounted(getProjectStore(projectId));
   const remoteConnectionId =
@@ -49,11 +47,14 @@ export const TerminalsPanel = observer(function TerminalsPanel() {
   const [mode, setMode] = useState<PanelMode>('terminals');
   const newTerminalHotkey = getEffectiveHotkey('newTerminal', keyboard);
 
-  const autoFocus = isActive && isRightOpen && provisionedTask.taskView.focusedRegion === 'right';
+  const autoFocus =
+    isActive &&
+    provisionedTask.taskView.isTerminalDrawerOpen &&
+    provisionedTask.taskView.focusedRegion === 'bottom';
 
   const handleCreate = async () => {
     if (!terminalMgr) return;
-    provisionedTask.taskView.setFocusedRegion('right');
+    provisionedTask.taskView.setFocusedRegion('bottom');
     const id = crypto.randomUUID();
     const name = nextTerminalName((terminalTabView.tabs ?? []).map((s) => s.data.name));
     try {
@@ -212,17 +213,17 @@ export const TerminalsPanel = observer(function TerminalsPanel() {
 
   return (
     <TabbedPtyPanel
-      autoFocus={autoFocus}
-      onFocusChange={(focused) => {
-        setIsPanelFocused(focused);
-        if (focused) provisionedTask.taskView.setFocusedRegion('right');
-      }}
       store={store}
       paneId={mode === 'terminals' ? 'terminals' : 'lifecycle-scripts'}
       getSession={(s) => s.session}
       remoteConnectionId={remoteConnectionId}
       tabBar={tabBar}
       emptyState={emptyState}
+      autoFocus={autoFocus}
+      onFocusChange={(focused) => {
+        setIsPanelFocused(focused);
+        if (focused) provisionedTask.taskView.setFocusedRegion('bottom');
+      }}
     />
   );
 });
