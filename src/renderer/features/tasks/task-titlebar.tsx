@@ -35,6 +35,7 @@ import { Button } from '@renderer/lib/ui/button';
 import { MicroLabel } from '@renderer/lib/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@renderer/lib/ui/popover';
 import { ShortcutHint } from '@renderer/lib/ui/shortcut-hint';
+import { Toggle } from '@renderer/lib/ui/toggle';
 import { ToggleGroup, ToggleGroupItem } from '@renderer/lib/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/lib/ui/tooltip';
 import { cn } from '@renderer/utils/utils';
@@ -43,7 +44,6 @@ import { IssueSelector } from './components/issue-selector/issue-selector';
 import { useTaskViewNavigation } from './hooks/use-task-view-navigation';
 import { useTaskViewShortcuts } from './hooks/use-task-view-shortcuts';
 import { useGitActions } from './use-git-actions';
-import { Toggle } from '@renderer/lib/ui/toggle';
 
 export const TaskTitlebar = observer(function TaskTitlebar() {
   const { projectId, taskId } = useTaskViewContext();
@@ -367,9 +367,11 @@ const ActiveTaskTitlebar = observer(function ActiveTaskTitlebar({
           <Tooltip>
             <TooltipTrigger>
               <Toggle
-              size='sm'
+                size="sm"
                 pressed={taskView.isTerminalDrawerOpen}
-                onPressedChange={() => taskView.setTerminalDrawerOpen(!taskView.isTerminalDrawerOpen)}
+                onPressedChange={() =>
+                  taskView.setTerminalDrawerOpen(!taskView.isTerminalDrawerOpen)
+                }
               >
                 <Terminal className="size-3.5" />
               </Toggle>
