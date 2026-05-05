@@ -56,9 +56,10 @@ function AppContent() {
   };
 
   const handleOpenSettingsFromMenu = useCallback(() => {
-    localStorage.setItem(HAS_SEEN_ONBOARDING, 'true');
+    if (view === 'onboarding' && stepsNeeded.length > 0) return false;
     setView('workspace');
-  }, []);
+    return true;
+  }, [view, stepsNeeded.length]);
 
   const renderContent = () => {
     if (isLoading || (view === 'onboarding' && frozenSteps === null)) {
