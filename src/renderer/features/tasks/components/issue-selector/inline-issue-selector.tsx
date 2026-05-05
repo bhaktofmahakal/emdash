@@ -6,8 +6,8 @@ import {
   ISSUE_PROVIDER_ORDER,
 } from '@renderer/features/integrations/issue-provider-meta';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@renderer/lib/ui/input-group';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@renderer/lib/ui/select';
 import { Kbd } from '@renderer/lib/ui/kbd';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@renderer/lib/ui/select';
 import { cn } from '@renderer/utils/utils';
 import { ConnectIssueIntegrationPlaceholder, IssueRow, ProviderLogo } from './issue-selector';
 import { useIssueSearch } from './useIssueSearch';

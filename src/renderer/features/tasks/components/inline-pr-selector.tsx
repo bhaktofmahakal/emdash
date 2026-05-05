@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { pullRequestErrorMessage, type PullRequest } from '@shared/pull-requests';
 import { rpc } from '@renderer/lib/ipc';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@renderer/lib/ui/input-group';
-import { Popover, PopoverContent, PopoverTrigger } from '@renderer/lib/ui/popover';
 import { Kbd } from '@renderer/lib/ui/kbd';
+import { Popover, PopoverContent, PopoverTrigger } from '@renderer/lib/ui/popover';
 import { cn } from '@renderer/utils/utils';
 
 type StatusFilter = 'open' | 'not-open';
