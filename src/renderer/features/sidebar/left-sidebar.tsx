@@ -1,4 +1,4 @@
-import { FolderPlus, MessageSquareShare, Plug, Puzzle, Settings } from 'lucide-react';
+import { FolderPlus, FolderInput, MessageSquareShare, Plug, Puzzle, Settings } from 'lucide-react';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 import {
@@ -36,7 +36,7 @@ export const LeftSidebar: React.FC = observer(function LeftSidebar() {
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-background-tertiary text-foreground-tertiary-muted transition-colors',
+        'relative flex flex-col h-full bg-background-tertiary text-foreground-tertiary-muted transition-colors',
         isDragOver && 'bg-accent/10 ring-2 ring-inset ring-accent/50'
       )}
       onDragOver={onDragOver}
@@ -44,6 +44,12 @@ export const LeftSidebar: React.FC = observer(function LeftSidebar() {
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
+      {isDragOver && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-2 bg-background-tertiary/80 backdrop-blur-sm pointer-events-none">
+          <FolderInput className="size-8 text-foreground" />
+          <span className="text-xs font-medium text-foreground">Drop to add project</span>
+        </div>
+      )}
       <SidebarSpace />
       <SidebarContainer className="w-full border-r-0 flex-1 min-h-0">
         <SidebarContent className="flex flex-col">
