@@ -24,6 +24,15 @@ import {
   type TaskStore,
 } from './task';
 
+async function markInitialConversationWorkingAfterProvision(
+  task: TaskStore | undefined,
+  initialConversation: CreateTaskParams['initialConversation']
+): Promise<void> {
+  if (!initialConversation?.initialPrompt?.trim()) return;
+  if (!task || !isProvisioned(task)) return;
+  await task.provisionedTask.conversations.markConversationWorking(initialConversation.id);
+}
+
 function formatCreateTaskError(error: CreateTaskError): string {
   switch (error.type) {
     case 'project-not-found':
@@ -278,6 +287,10 @@ export class TaskManagerStore {
     }
 
     await this.provisionTask(params.id);
+    await markInitialConversationWorkingAfterProvision(
+      this.tasks.get(params.id),
+      params.initialConversation
+    );
   }
 
   async provisionTask(taskId: string): Promise<void> {
