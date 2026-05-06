@@ -26,10 +26,7 @@ export class WorkspaceStore {
     baseRef: string,
     sshConnectionId?: string
   ) {
-    makeObservable(this, {
-      connectionState: computed,
-    });
-
+    makeObservable(this, { connectionState: computed });
     this.sshConnectionId = sshConnectionId;
     this.tasks.replace(initialTasks);
     this.repository = new RepositoryStore(projectId, settingsStore, baseRef, workspaceId);
