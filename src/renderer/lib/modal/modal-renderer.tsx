@@ -63,13 +63,7 @@ export const ModalRenderer = observer(function ModalRenderer() {
 
   const popupRef = useRef<HTMLDivElement>(null);
   const initialFocus = useCallback(() => {
-    const marker = popupRef.current?.querySelector<HTMLElement>('[data-autofocus]');
-    if (!marker) return true;
-    const focusableSelector =
-      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const target = marker.matches(focusableSelector)
-      ? marker
-      : marker.querySelector<HTMLElement>(focusableSelector);
+    const target = popupRef.current?.querySelector<HTMLElement>('[data-autofocus]');
     if (!target) return true;
     if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
       requestAnimationFrame(() => target.select());

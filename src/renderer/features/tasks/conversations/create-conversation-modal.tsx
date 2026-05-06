@@ -76,13 +76,12 @@ export const CreateConversationModal = observer(function CreateConversationModal
         <FieldGroup>
           <Field>
             <FieldLabel>Agent</FieldLabel>
-            <div data-autofocus>
-              <AgentSelector
-                value={providerId}
-                onChange={setProviderOverride}
-                connectionId={connectionId}
-              />
-            </div>
+            <AgentSelector
+              autoFocus
+              value={providerId}
+              onChange={setProviderOverride}
+              connectionId={connectionId}
+            />
           </Field>
           <Field>
             <div className="flex items-center gap-2">
