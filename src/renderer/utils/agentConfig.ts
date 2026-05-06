@@ -56,9 +56,9 @@ export const agentConfig: Record<AgentProviderId, AgentInfo> = {
   continue: { name: 'Continue', logo: continueLogo, alt: 'Continue CLI' },
   codebuff: { name: 'Codebuff', logo: codebuffLogo, alt: 'Codebuff CLI' },
   junie: {
-    name: 'Junie CLI',
+    name: 'Junie',
     logo: junieLogo,
-    alt: 'Junie CLI',
+    alt: 'Junie',
   },
   amp: { name: 'Amp', logo: ampLogo, alt: 'Amp Code' },
   // Without initial prompt support

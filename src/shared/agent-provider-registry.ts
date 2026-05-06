@@ -436,7 +436,7 @@ export const AGENT_PROVIDERS: AgentProviderDefinition[] = [
   },
   {
     id: 'junie',
-    name: 'Junie CLI',
+    name: 'Junie',
     description:
       'JetBrains agentic coding CLI for interactive terminal and headless project workflows.',
     docUrl: 'https://junie.jetbrains.com/docs/junie-cli.html',
@@ -447,7 +447,7 @@ export const AGENT_PROVIDERS: AgentProviderDefinition[] = [
     initialPromptFlag: '--task',
     sessionIdFlag: '--session-id',
     icon: 'junie-color.png',
-    alt: 'Junie CLI',
+    alt: 'Junie',
     terminalOnly: true,
   },
   {
