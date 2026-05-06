@@ -1,10 +1,13 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '@main/db/client';
 import { conversations } from '@main/db/schema';
 
-export async function touchConversation(conversationId: string): Promise<void> {
+export async function touchConversation(
+  conversationId: string,
+  lastInteractedAt: string
+): Promise<void> {
   await db
     .update(conversations)
-    .set({ lastInteractedAt: sql`CURRENT_TIMESTAMP` })
+    .set({ lastInteractedAt })
     .where(eq(conversations.id, conversationId));
 }

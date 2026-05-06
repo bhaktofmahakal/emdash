@@ -182,10 +182,11 @@ export class ConversationManagerStore {
   async touchConversation(conversationId: string): Promise<void> {
     const store = this.conversations.get(conversationId);
     if (!store) return;
+    const now = new Date().toISOString();
     runInAction(() => {
-      store.data.lastInteractedAt = new Date().toISOString();
+      store.data.lastInteractedAt = now;
     });
-    await rpc.conversations.touchConversation(conversationId);
+    await rpc.conversations.touchConversation(conversationId, now);
   }
 
   dispose(): void {
